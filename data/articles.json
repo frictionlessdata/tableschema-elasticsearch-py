@@ -1,0 +1,64 @@
+{
+    "primaryKey": ["id"],
+    "foreignKeys": [
+        {
+            "fields": "parent",
+            "reference": {
+                "resource": "self",
+                "fields": "id"
+            }
+        }
+    ],
+    "fields": [
+        {
+            "name": "id",
+            "type": "integer",
+            "constraints": {
+                "required": true
+            }
+        },
+        {
+            "name": "parent",
+            "type": "integer"
+        },
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "current",
+            "type": "boolean"
+        },
+        {
+            "name": "rating",
+            "type": "number"
+        },
+        {
+            "name": "created_year",
+            "type": "date",
+            "format": "fmt:%Y"
+        },
+        {
+            "name": "created_date",
+            "type": "date"
+        },
+        {
+            "name": "created_time",
+            "type": "time"
+        },
+        {
+            "name": "created_datetime",
+            "type": "datetime"
+        },
+        {
+            "name": "stats",
+            "type": "object",
+            "es:index": false
+        },
+        {
+            "name": "persons",
+            "type": "array",
+            "es:itemType": "string"
+        }
+    ]
+}
