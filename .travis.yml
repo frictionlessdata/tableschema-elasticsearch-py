@@ -4,6 +4,9 @@ sudo:
 dist:
   trusty
 
+services:
+  - elasticsearch
+
 addons:
   postgresql: "9.4"
   apt:
@@ -26,6 +29,9 @@ env:
 install:
   - make install
   - pip install coveralls
+
+before_script:
+  - sleep 10
 
 script:
   - make test
