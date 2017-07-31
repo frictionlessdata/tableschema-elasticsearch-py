@@ -4,8 +4,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import six
 import json
-import pytest
 import io
 from tabulator import Stream
 from elasticsearch import Elasticsearch
@@ -65,3 +65,17 @@ def test_storage():
 
     # Delete buckets
     storage.delete()
+
+
+def test_es_instance():
+    '''An Elasticsearch instance can be passed to Storage or will be created'''
+    storage = Storage()
+    assert repr(storage) == "Storage <Elasticsearch([{}])>"
+
+    es = Elasticsearch(['localhost'])
+    storage = Storage(es)
+
+    if six.PY2:
+        assert repr(storage) == "Storage <Elasticsearch([{u'host': u'localhost'}])>"
+    else:
+        assert repr(storage) == "Storage <Elasticsearch([{'host': 'localhost'}])>"
