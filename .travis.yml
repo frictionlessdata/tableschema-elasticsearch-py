@@ -38,3 +38,12 @@ before_deploy:
   - pandoc -f markdown_github -t rst -o README.rst README.md
   - mv README.rst README.md
 
+deploy:
+  provider: pypi
+  user: brew
+  distributions: sdist bdist_wheel
+  skip_cleanup: true
+  on:
+    tags: true
+  password:
+    secure: AkWDEZPeBoTHPj4wP89Y1FhVlGGcsoF61NdamgZtIFo8dn8sB/mPMh1zVZXUSKaJE/dykl6i4hNH4MaYYLK+Sn41tCYBDsjxHe+asLhkVa3Eyc2KUgoqL4CtEzkWqncRjik7mCEb6Yh/QKFH+TtiuioXpLAr+1oEI2vafZJiG1t9ULFfLfJ29RS5jso1ukk8RQ1CqA/1vWmQtO3k7blHmZMXf+MGx/O3ACYmyfagounFso7fw9LkAU9vsiAbP4sem9D2ti/thMG5l/eXMIQjtyuaOhjZX9URtUUmudREuAR723bV3gkiBXu7ttGA9GEm/r7S7KS6mbeHQ+vhqfnGYwHUzPd+HKs8+GegyMG9Gdnqi/qIMWL4eSgArSiEmD4YQjiFGR0Ap+9Z/AScEt0Wq0XwUj/k1nj66t3Iw6x8AB8Ykw0AqGOtw+RWoYLd4M4LVTZ1szVipAMOjvBpGesfquOW9K4Dq8L07AxLE18ELy6w+VDXFI8JcBmD5xFNq1IXR4ehZRUwAK9q9SXqPEVrX6Yp4yBFD1iPQHzOpxm0A2wZXeULrwgi4BptZptEF0qnKrwhiWLZHkFt4xaHokPAE3Ur/HjJ0NCfiZ5zGbykK3NdnHjk0t6+H1XLah7PDH3xVg1tCOnqwkO9GJpJOaer0cCbmYC+Nfk0C4a58CZXs9E=
