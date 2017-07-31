@@ -37,7 +37,7 @@ class MappingGenerator(object):
         if enabled and schema_type == 'object':
             try:
                 subschema = field['es:schema']
-            except KeyError as e:
+            except KeyError:
                 raise ValueError('Must define es:schema for object fields'
                                  ' (or disable them using es:index=False)')
 
@@ -79,7 +79,7 @@ class MappingGenerator(object):
             field = copy(field)
             try:
                 field['type'] = field['es:itemType']
-            except KeyError as e:
+            except KeyError:
                 raise ValueError('Must define es:itemType for array fields')
             return cls._convert_field(field, prefix)
 
