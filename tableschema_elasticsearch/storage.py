@@ -18,9 +18,9 @@ from . import mappers
 # Module API
 
 class Storage(object):
-    """SQL Tabular Storage.
+    """Elasticsearch Tabular Storage.
 
-    It's an implementation of `jsontablescema.Storage`.
+    It's an implementation of `tableschema.Storage`.
 
     Args:
         es (object): ElasticSearch instance
@@ -28,19 +28,14 @@ class Storage(object):
 
     # Public
 
-    def __init__(self, es):
-
-        # Set attributes
-        self.__es = Elasticsearch()
+    def __init__(self, es=None):
+        # Use the passed `es` or create a new Elasticsearch instance
+        self.__es = es if es is not None else Elasticsearch()
 
     def __repr__(self):
-
         # Template and format
-        template = 'Storage <{engine}>'
-        text = template.format(
-            engine=self.__es
-        )
-
+        template = 'Storage {engine}'
+        text = template.format(engine=self.__es)
         return text
 
     @property
