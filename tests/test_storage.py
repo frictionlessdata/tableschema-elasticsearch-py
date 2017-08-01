@@ -54,11 +54,13 @@ def test_storage():
     assert sorted(list(storage.buckets)) == ['unit-tests']
 
     # Assert descriptors
+    # print(articles_descriptor)
+    print(storage.describe('unit-tests', 'articles'))
     # assert storage.describe('articles') == sync_descriptor(articles_descriptor)
     # assert storage.describe('comments') == sync_descriptor(comments_descriptor)
 
     # Assert rows
-    print(storage.read('unit-tests'))
+    # print(storage.read('unit-tests'))
     assert sorted(list(storage.read('unit-tests', doc_type='articles')),
                   key=lambda x:x['id']) == articles_rows
     assert list(storage.read('unit-tests', doc_type='comments')) == comments_rows

@@ -8,6 +8,7 @@ import datetime
 import itertools
 import collections
 import uuid
+import six
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk
@@ -107,8 +108,25 @@ class Storage(object):
         else:
             internal_delete(bucket)
 
-    def describe(self, bucket, descriptor=None):
-        raise NotImplementedError()
+    def describe(self, bucket, doc_type, descriptor=None):
+        # # Set descriptor
+        # if descriptor is not None:
+        #     self.__descriptors[bucket] = descriptor
+
+        # Get descriptor
+        # else:
+            # descriptor = self.__descriptors.get(bucket)
+            # if descriptor is None:
+        field_mapping = self.__es.indices.get_mapping(index=bucket,
+                                                      doc_type=doc_type)
+        field_mapping = six.next(six.itervalues(field_mapping))
+        # Get doc_type properties
+        doc_type_properties = \
+            field_mapping.get('mappings')[doc_type].get('properties')
+        descriptor = mappers.field_mapping_properties_to_descriptor(
+            doc_type_properties)
+
+        return descriptor
 
     def iter(self, bucket, doc_type=None):
         from_ = 0

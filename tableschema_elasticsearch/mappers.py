@@ -109,17 +109,34 @@ class MappingGenerator(object):
 def descriptor_to_mapping(descriptor, mapping_generator_cls=None):
     """Convert descriptor to ElasticSearch Mapping.
     """
-
     if mapping_generator_cls is None:
         mapping_generator_cls = MappingGenerator
     mapping_gen = mapping_generator_cls()
     mapping_gen.generate_from_schema(descriptor)
-    print(mapping_gen.get_mapping())
+    # print(mapping_gen.get_mapping())
     return mapping_gen.get_mapping()
 
 
-def columns_and_constraints_to_descriptor(prefix, tablename, columns,
-                                          constraints, autoincrement_column):
-    """Convert ElasticSearch Mapping to descriptor.
-    """
-    raise NotImplementedError
+def field_mapping_properties_to_descriptor(field_mapping_properties):
+    """Convert ElasticSearch Mapping propertries to descriptor."""
+    def get_schema_field_type(es_field_type):
+        print(es_field_type)
+        es_to_schema_field_mapping = {
+            'long': {'type': 'integer'},
+            'scaled_float': {'type': 'number'},
+            'text': {'type': 'string'},
+            'boolean': {'type': 'boolean'},
+            'date': {'type': 'date'},
+            'object': {'type': 'object'}
+        }
+        # return the schema type, or default to 'string'
+        return es_to_schema_field_mapping.get(
+            es_field_type, es_to_schema_field_mapping['text'])
+
+    fields = []
+    for prop_name, prop_value in field_mapping_properties.items():
+        field = get_schema_field_type(prop_value.get('type'))
+        field['name'] = prop_name
+        print(field)
+        fields.append(field)
+    return {'fields': fields}
