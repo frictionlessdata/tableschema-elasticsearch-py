@@ -35,8 +35,11 @@ Then we could interact with storage ('buckets' are ElasticSearch indexes in this
 ```python
 storage.buckets # iterator over bucket names
 storage.create('bucket', [(doc_type, descriptor)], 
-               reindex=False, mapping_generator_cls=None)
-        # Reindex will copy existing documents from an existing index with the same name (not implemented yet)
+               reindex=False,
+               always_recreate=False,
+               mapping_generator_cls=None)
+        # reindex will copy existing documents from an existing index with the same name (not implemented yet)
+        # always_recreate will always recreate an index, even if it already exists. default is to update mappings only.
         # mapping_generator_cls allows customization of the generated mapping  
 storage.delete('bucket')
 storage.describe('bucket') # return descriptor, not implemented yet
