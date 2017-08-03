@@ -4,18 +4,25 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import sys
 import datetime
 import itertools
 import collections
 import uuid
 
+import logging
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk
 
 from . import mappers
 
 
+tracer = logging.getLogger('elasticsearch')
+tracer.setLevel(logging.CRITICAL)
+tracer.addHandler(logging.StreamHandler(sys.stderr))
+
 # Module API
+
 
 class Storage(object):
     """Elasticsearch Tabular Storage.
@@ -54,7 +61,7 @@ class Storage(object):
         return '/'.join([str(row.get(k)) for k in primary_key])
 
     def create(self, bucket, doc_types,
-               reindex=False, mapping_generator_cls=None):
+               reindex=False, always_recreate=False, mapping_generator_cls=None):
         """Create index with mapping by schema.
 
         Parameters
@@ -63,15 +70,21 @@ class Storage(object):
             Name of index to be created
         doc_types: list<(doc_type, descriptor)>
             List of tuples of doc_types and matching descriptors
+        always_recreate: Delete index if already exists (otherwise just update mapping)
+        mapping_generator_cls: subclass of MappingGenerator
+
 
         """
         existing_index_names = []
         if self.__es.indices.exists_alias(name=bucket):
             existing_index_names = self.__es.indices.get_alias(bucket)
             existing_index_names = list(existing_index_names.keys())
-        index_name = self.get_index_name(bucket)
-        self.__es.indices.create(index_name)
-        self.__es.indices.put_alias(index_name, bucket)
+        if len(existing_index_names) == 0 or always_recreate:
+            index_name = self.get_index_name(bucket)
+            self.__es.indices.create(index_name)
+            self.__es.indices.put_alias(index_name, bucket)
+        else:
+            index_name = existing_index_names.pop()
 
         for doc_type, descriptor in doc_types:
             mapping = mappers.descriptor_to_mapping(

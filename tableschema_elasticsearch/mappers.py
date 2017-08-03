@@ -114,7 +114,6 @@ def descriptor_to_mapping(descriptor, mapping_generator_cls=None):
         mapping_generator_cls = MappingGenerator
     mapping_gen = mapping_generator_cls()
     mapping_gen.generate_from_schema(descriptor)
-    print(mapping_gen.get_mapping())
     return mapping_gen.get_mapping()
 
 
