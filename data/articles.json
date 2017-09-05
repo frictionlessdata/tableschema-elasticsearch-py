@@ -36,7 +36,7 @@
         {
             "name": "created_year",
             "type": "date",
-            "format": "fmt:%Y"
+            "format": "%Y"
         },
         {
             "name": "created_date",
