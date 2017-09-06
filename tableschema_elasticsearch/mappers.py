@@ -16,8 +16,7 @@ class MappingGenerator(object):
 
     @classmethod
     def _convert_date_format(cls, fmt):
-        if fmt is not None and fmt.startswith('fmt:'):
-            fmt = fmt[4:]
+        if fmt not in [None, 'default', 'any']:
             fmt = fmt.replace('%d', 'dd')
             fmt = fmt.replace('%m', 'MM')
             fmt = fmt.replace('%y', 'yy')
