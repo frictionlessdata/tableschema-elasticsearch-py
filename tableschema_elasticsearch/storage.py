@@ -144,23 +144,36 @@ class Storage(object):
 
         return rows
 
-    def write(self, bucket, doc_type, rows, primary_key, as_generator=False):
+    def write(self, bucket, doc_type, rows, primary_key, update=False, as_generator=False):
 
         if primary_key is None or len(primary_key) == 0:
             raise ValueError('primary_key cannot be an empty list')
 
-        def actions(rows_, doc_type_, primary_key_):
-            for row in rows_:
-                yield {
-                    '_op_type': 'index',
-                    '_index': bucket,
-                    '_type': doc_type_,
-                    '_id': self.generate_doc_id(row, primary_key_),
-                    '_source': row
-                }
+        def actions(rows_, doc_type_, primary_key_, update_):
+            if update_:
+                for row_ in rows_:
+                    yield {
+                        '_op_type': 'update',
+                        '_index': bucket,
+                        '_type': doc_type_,
+                        '_id': self.generate_doc_id(row_, primary_key_),
+                        '_source': {
+                            'doc': row_,
+                            'doc_as_upsert': True
+                        }
+                    }
+            else:
+                for row_ in rows_:
+                    yield {
+                        '_op_type': 'index',
+                        '_index': bucket,
+                        '_type': doc_type_,
+                        '_id': self.generate_doc_id(row_, primary_key_),
+                        '_source': row_
+                    }
 
         iterables = itertools.tee(rows)
-        actions_iterable = actions(iterables[0], doc_type, primary_key)
+        actions_iterable = actions(iterables[0], doc_type, primary_key, update)
 
         iter = zip(streaming_bulk(self.__es, actions=actions_iterable), iterables[1])
 

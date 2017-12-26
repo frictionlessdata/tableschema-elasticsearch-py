@@ -63,6 +63,29 @@ def test_storage():
                   key=lambda x:x['id']) == articles_rows
     assert list(storage.read('unit-tests', doc_type='comments')) == comments_rows
 
+    # Test update mode
+    articles_rows.append({
+        'id': 'last-one',
+        'name': 'My last article',
+    })
+    updates = [
+        dict(
+            id=article['id'],
+            index='%08d' % i
+        )
+        for i, article in enumerate(articles_rows)
+    ]
+    list(storage.write('unit-tests', 'articles', updates,
+                       articles_descriptor['primaryKey'],
+                       update=True))
+    list(storage.write('unit-tests', 'articles', [articles_rows[-1]],
+                       articles_descriptor['primaryKey'],
+                       update=True))
+    for a, u in zip(articles_rows, updates):
+        a.update(u)
+    assert sorted(list(storage.read('unit-tests', doc_type='articles')),
+                  key=lambda x:x['id']) == articles_rows
+
     # Delete buckets
     storage.delete()
 
