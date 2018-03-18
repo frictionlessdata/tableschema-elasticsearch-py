@@ -7,12 +7,73 @@ from __future__ import unicode_literals
 import six
 import json
 import io
+import pytest
+import logging
 from tabulator import Stream
 from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import RequestError
 from tableschema_elasticsearch import Storage
 
 
 # Tests
+def test_reindex():
+    # Prepare data
+    articles_rows = Stream('data/articles.csv').open().iter()
+    headers = next(articles_rows)
+    schema = dict(
+        fields=[
+            dict(
+                name=name,
+                type='string'
+            )
+            for name in headers
+        ],
+        primaryKey=['id']
+    )
+    datas = [
+        dict(zip(headers, row)) for row in articles_rows
+    ]
+
+    # Prepare engine
+    engine = Elasticsearch()
+    storage = Storage(engine)
+    storage.delete()
+    storage.create(
+            'reindexing',
+            [('articles', schema)])
+    
+    # Write data
+    list(storage.write('reindexing', 'articles', datas, schema['primaryKey']))
+    assert sorted(list(storage.read('reindexing', doc_type='articles')),
+                  key=lambda x:x['id']) == datas
+
+    # Modify schema
+    for f in schema['fields']:
+        if f['name'] == 'created_year':
+            f['type'] = 'integer'
+
+    # Prepare engine
+    engine = Elasticsearch()
+    storage = Storage(engine)
+    assert sorted(list(storage.read('reindexing', doc_type='articles')),
+                  key=lambda x:x['id']) == datas
+
+    with pytest.raises(RequestError):
+        storage.create(
+                'reindexing',
+                [('articles', schema)])
+
+    storage.create(
+        'reindexing',
+        [('articles', schema)],
+        reindex=True)
+
+    # Prepare engine
+    engine = Elasticsearch()
+    storage = Storage(engine)
+    assert sorted(list(storage.read('reindexing', doc_type='articles')),
+                  key=lambda x:x['id']) == datas
+
 
 def test_storage():
 

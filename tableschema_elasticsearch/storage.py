@@ -13,6 +13,7 @@ import uuid
 import logging
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk
+from elasticsearch.exceptions import RequestError
 
 from . import mappers
 
@@ -57,6 +58,19 @@ class Storage(object):
         today = datetime.datetime.now().strftime('%Y%m%d')
         return '{}_{}_{}'.format(bucket, today, uid)
 
+    def create_index(self, bucket):
+        index_name = self.get_index_name(bucket)
+        self.__es.indices.create(index_name)
+        self.__es.indices.put_alias(index_name, bucket)
+        return index_name
+
+    def put_mapping(self, bucket, doc_types, index_name, mapping_generator_cls):
+        for doc_type, descriptor in doc_types:
+            mapping = mappers.descriptor_to_mapping(
+                descriptor, mapping_generator_cls=mapping_generator_cls
+            )
+            self.__es.indices.put_mapping(doc_type, mapping, index=index_name)
+
     def generate_doc_id(self, row, primary_key):
         return '/'.join([str(row.get(k)) for k in primary_key])
 
@@ -71,6 +85,8 @@ class Storage(object):
         doc_types: list<(doc_type, descriptor)>
             List of tuples of doc_types and matching descriptors
         always_recreate: Delete index if already exists (otherwise just update mapping)
+        reindex: On mapping mismath, automatically create new
+                 index and migrate existing indexes to it
         mapping_generator_cls: subclass of MappingGenerator
 
 
@@ -78,25 +94,38 @@ class Storage(object):
         existing_index_names = []
         if self.__es.indices.exists_alias(name=bucket):
             existing_index_names = self.__es.indices.get_alias(bucket)
-            existing_index_names = list(existing_index_names.keys())
+            existing_index_names = sorted(existing_index_names.keys())
+
         if len(existing_index_names) == 0 or always_recreate:
-            index_name = self.get_index_name(bucket)
-            self.__es.indices.create(index_name)
-            self.__es.indices.put_alias(index_name, bucket)
-        else:
-            index_name = existing_index_names.pop()
+            index_name = self.create_index(bucket)
+            self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
 
-        for doc_type, descriptor in doc_types:
-            mapping = mappers.descriptor_to_mapping(
-                descriptor, mapping_generator_cls=mapping_generator_cls
-            )
-            self.__es.indices.put_mapping(doc_type, mapping, index=index_name)
-
-        if reindex:
-            raise NotImplementedError
         else:
-            for existing_index_name in existing_index_names:
-                self.__es.indices.delete(existing_index_name)
+            index_name = existing_index_names[-1]
+            try:
+                self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
+                existing_index_names.pop(-1)
+
+            except RequestError:
+                if reindex:
+                    index_name = self.create_index(bucket)
+                    self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
+                    reindex_body = dict(
+                        source=dict(
+                            index=existing_index_names
+                        ),
+                        dest=dict(
+                            index=index_name,
+                            version_type='external'
+                        )
+                    )
+                    self.__es.reindex(reindex_body)
+                    self.__es.indices.flush()
+                else:
+                    raise
+
+        for existing_index_name in existing_index_names:
+            self.__es.indices.delete(existing_index_name)
 
     def delete(self, bucket=None):
         """Delete index with mapping by schema.
