@@ -55,7 +55,7 @@ class Storage(object):
 
     def get_index_name(self, bucket):
         uid = str(uuid.uuid4())[:8]
-        today = datetime.datetime.now().strftime('%Y%m%d')
+        today = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         return '{}_{}_{}'.format(bucket, today, uid)
 
     def create_index(self, bucket):
@@ -107,25 +107,24 @@ class Storage(object):
                 existing_index_names.pop(-1)
 
             except RequestError:
-                if reindex:
-                    index_name = self.create_index(bucket)
-                    self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
-                    reindex_body = dict(
-                        source=dict(
-                            index=existing_index_names
-                        ),
-                        dest=dict(
-                            index=index_name,
-                            version_type='external'
-                        )
-                    )
-                    self.__es.reindex(reindex_body)
-                    self.__es.indices.flush()
-                else:
-                    raise
+                index_name = self.create_index(bucket)
+                self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
 
-        for existing_index_name in existing_index_names:
-            self.__es.indices.delete(existing_index_name)
+        if reindex:
+            reindex_body = dict(
+                source=dict(
+                    index=existing_index_names
+                ),
+                dest=dict(
+                    index=index_name,
+                    version_type='external'
+                )
+            )
+            self.__es.reindex(reindex_body)
+            self.__es.indices.flush()
+
+            for existing_index_name in existing_index_names:
+                self.__es.indices.delete(existing_index_name)
 
     def delete(self, bucket=None):
         """Delete index with mapping by schema.

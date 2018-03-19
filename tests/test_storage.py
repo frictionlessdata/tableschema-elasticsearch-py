@@ -47,10 +47,22 @@ def test_reindex():
     assert sorted(list(storage.read('reindexing', doc_type='articles')),
                   key=lambda x:x['id']) == datas
 
+    # Prepare engine
+    engine = Elasticsearch()
+    storage = Storage(engine)
+    assert sorted(list(storage.read('reindexing', doc_type='articles')),
+                  key=lambda x:x['id']) == datas
+
     # Modify schema
     for f in schema['fields']:
         if f['name'] == 'created_year':
             f['type'] = 'integer'
+        if f['name'] == 'created_date':
+            f['type'] = 'date'
+
+    storage.create(
+            'reindexing',
+            [('articles', schema)])
 
     # Prepare engine
     engine = Elasticsearch()
@@ -58,11 +70,9 @@ def test_reindex():
     assert sorted(list(storage.read('reindexing', doc_type='articles')),
                   key=lambda x:x['id']) == datas
 
-    with pytest.raises(RequestError):
-        storage.create(
-                'reindexing',
-                [('articles', schema)])
+    assert(len(engine.indices.get_alias('reindexing'))==2)
 
+    # Reindex with new schema    
     storage.create(
         'reindexing',
         [('articles', schema)],
@@ -71,6 +81,7 @@ def test_reindex():
     # Prepare engine
     engine = Elasticsearch()
     storage = Storage(engine)
+    assert(len(engine.indices.get_alias('reindexing'))==1)
     assert sorted(list(storage.read('reindexing', doc_type='articles')),
                   key=lambda x:x['id']) == datas
 
