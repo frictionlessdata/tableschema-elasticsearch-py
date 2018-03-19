@@ -58,9 +58,14 @@ class Storage(object):
         today = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         return '{}_{}_{}'.format(bucket, today, uid)
 
-    def create_index(self, bucket):
+    def create_index(self, bucket, index_settings=None):
         index_name = self.get_index_name(bucket)
-        self.__es.indices.create(index_name)
+        body = None
+        if index_settings is not None:
+            body = dict(
+                settings=index_settings
+            )
+        self.__es.indices.create(index_name, body=body)
         self.__es.indices.put_alias(index_name, bucket)
         return index_name
 
@@ -75,7 +80,8 @@ class Storage(object):
         return '/'.join([str(row.get(k)) for k in primary_key])
 
     def create(self, bucket, doc_types,
-               reindex=False, always_recreate=False, mapping_generator_cls=None):
+               reindex=False, always_recreate=False,
+               mapping_generator_cls=None, index_settings=None):
         """Create index with mapping by schema.
 
         Parameters
@@ -85,11 +91,10 @@ class Storage(object):
         doc_types: list<(doc_type, descriptor)>
             List of tuples of doc_types and matching descriptors
         always_recreate: Delete index if already exists (otherwise just update mapping)
-        reindex: On mapping mismath, automatically create new
-                 index and migrate existing indexes to it
+        reindex: On mapping mismath, automatically create new index and migrate existing
+                 indexes to it
         mapping_generator_cls: subclass of MappingGenerator
-
-
+        index_settings: settings which will be used in index creation
         """
         existing_index_names = []
         if self.__es.indices.exists_alias(name=bucket):
@@ -97,7 +102,7 @@ class Storage(object):
             existing_index_names = sorted(existing_index_names.keys())
 
         if len(existing_index_names) == 0 or always_recreate:
-            index_name = self.create_index(bucket)
+            index_name = self.create_index(bucket, index_settings=index_settings)
             self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
 
         else:
@@ -107,10 +112,10 @@ class Storage(object):
                 existing_index_names.pop(-1)
 
             except RequestError:
-                index_name = self.create_index(bucket)
+                index_name = self.create_index(bucket, index_settings=index_settings)
                 self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
 
-        if reindex:
+        if reindex and len(existing_index_names) > 0:
             reindex_body = dict(
                 source=dict(
                     index=existing_index_names
