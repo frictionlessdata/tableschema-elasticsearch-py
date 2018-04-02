@@ -13,6 +13,7 @@ import uuid
 import logging
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk
+from elasticsearch.exceptions import RequestError
 
 from . import mappers
 
@@ -54,14 +55,33 @@ class Storage(object):
 
     def get_index_name(self, bucket):
         uid = str(uuid.uuid4())[:8]
-        today = datetime.datetime.now().strftime('%Y%m%d')
+        today = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         return '{}_{}_{}'.format(bucket, today, uid)
+
+    def create_index(self, bucket, index_settings=None):
+        index_name = self.get_index_name(bucket)
+        body = None
+        if index_settings is not None:
+            body = dict(
+                settings=index_settings
+            )
+        self.__es.indices.create(index_name, body=body)
+        self.__es.indices.put_alias(index_name, bucket)
+        return index_name
+
+    def put_mapping(self, bucket, doc_types, index_name, mapping_generator_cls):
+        for doc_type, descriptor in doc_types:
+            mapping = mappers.descriptor_to_mapping(
+                descriptor, mapping_generator_cls=mapping_generator_cls
+            )
+            self.__es.indices.put_mapping(doc_type, mapping, index=index_name)
 
     def generate_doc_id(self, row, primary_key):
         return '/'.join([str(row.get(k)) for k in primary_key])
 
     def create(self, bucket, doc_types,
-               reindex=False, always_recreate=False, mapping_generator_cls=None):
+               reindex=False, always_recreate=False,
+               mapping_generator_cls=None, index_settings=None):
         """Create index with mapping by schema.
 
         Parameters
@@ -71,30 +91,43 @@ class Storage(object):
         doc_types: list<(doc_type, descriptor)>
             List of tuples of doc_types and matching descriptors
         always_recreate: Delete index if already exists (otherwise just update mapping)
+        reindex: On mapping mismath, automatically create new index and migrate existing
+                 indexes to it
         mapping_generator_cls: subclass of MappingGenerator
-
-
+        index_settings: settings which will be used in index creation
         """
         existing_index_names = []
         if self.__es.indices.exists_alias(name=bucket):
             existing_index_names = self.__es.indices.get_alias(bucket)
-            existing_index_names = list(existing_index_names.keys())
+            existing_index_names = sorted(existing_index_names.keys())
+
         if len(existing_index_names) == 0 or always_recreate:
-            index_name = self.get_index_name(bucket)
-            self.__es.indices.create(index_name)
-            self.__es.indices.put_alias(index_name, bucket)
-        else:
-            index_name = existing_index_names.pop()
+            index_name = self.create_index(bucket, index_settings=index_settings)
+            self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
 
-        for doc_type, descriptor in doc_types:
-            mapping = mappers.descriptor_to_mapping(
-                descriptor, mapping_generator_cls=mapping_generator_cls
+        else:
+            index_name = existing_index_names[-1]
+            try:
+                self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
+                existing_index_names.pop(-1)
+
+            except RequestError:
+                index_name = self.create_index(bucket, index_settings=index_settings)
+                self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
+
+        if reindex and len(existing_index_names) > 0:
+            reindex_body = dict(
+                source=dict(
+                    index=existing_index_names
+                ),
+                dest=dict(
+                    index=index_name,
+                    version_type='external'
+                )
             )
-            self.__es.indices.put_mapping(doc_type, mapping, index=index_name)
+            self.__es.reindex(reindex_body)
+            self.__es.indices.flush()
 
-        if reindex:
-            raise NotImplementedError
-        else:
             for existing_index_name in existing_index_names:
                 self.__es.indices.delete(existing_index_name)
 

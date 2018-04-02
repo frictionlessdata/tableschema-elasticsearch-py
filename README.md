@@ -103,7 +103,7 @@ storage.create('bucket', [(doc_type, descriptor)],
                reindex=False,
                always_recreate=False,
                mapping_generator_cls=None)
-        # reindex will copy existing documents from an existing index with the same name (not implemented yet)
+        # reindex will copy existing documents from an existing index with the same name (in case of a mapping conflict)
         # always_recreate will always recreate an index, even if it already exists. default is to update mappings only.
         # mapping_generator_cls allows customization of the generated mapping
 storage.delete('bucket')
