@@ -60,9 +60,13 @@ def test_reindex():
         if f['name'] == 'created_date':
             f['type'] = 'date'
 
-    storage.create(
-            'reindexing',
-            [('articles', schema)])
+    try:
+        storage.create(
+                'reindexing',
+                [('articles', schema)])
+        assert False
+    except:
+        pass
 
     # Prepare engine
     engine = Elasticsearch()
@@ -70,7 +74,7 @@ def test_reindex():
     assert sorted(list(storage.read('reindexing', doc_type='articles')),
                   key=lambda x:x['id']) == datas
 
-    assert(len(engine.indices.get_alias('reindexing'))==2)
+    assert(len(engine.indices.get_alias('reindexing'))==1)
 
     # Reindex with new schema    
     storage.create(
@@ -84,6 +88,7 @@ def test_reindex():
     assert(len(engine.indices.get_alias('reindexing'))==1)
     assert sorted(list(storage.read('reindexing', doc_type='articles')),
                   key=lambda x:x['id']) == datas
+    assert(len(engine.indices.get_alias('reindexing'))==1)
 
 
 def test_storage():

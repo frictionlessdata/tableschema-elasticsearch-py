@@ -112,8 +112,11 @@ class Storage(object):
                 existing_index_names.pop(-1)
 
             except RequestError:
-                index_name = self.create_index(bucket, index_settings=index_settings)
-                self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
+                if reindex:
+                    index_name = self.create_index(bucket, index_settings=index_settings)
+                    self.put_mapping(bucket, doc_types, index_name, mapping_generator_cls)
+                else:
+                    raise
 
         if reindex and len(existing_index_names) > 0:
             reindex_body = dict(
