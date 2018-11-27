@@ -5,26 +5,44 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from copy import copy
+import re
 
 # Module API
 
 
 class MappingGenerator(object):
 
+    DATE_CONVERSION = {
+        'd': 'dd',
+        'm': 'MM',
+        'y': 'yy',
+        'Y': 'yyyy',
+        'H': 'HH',
+        'M': 'mm',
+        'S': 'ss',
+        'f': 'SSS',
+    }
+
     def __init__(self, base={}):
         self._mapping = base
 
     @classmethod
+    def _quote_literals(cls, s):
+        return re.sub('[a-zA-Z]+', lambda x: "'" + x.group(0) + "'", s)
+
+    @classmethod
     def _convert_date_format(cls, fmt):
         if fmt not in [None, 'default', 'any']:
-            fmt = fmt.replace('%d', 'dd')
-            fmt = fmt.replace('%m', 'MM')
-            fmt = fmt.replace('%y', 'yy')
-            fmt = fmt.replace('%Y', 'yyyy')
-            fmt = fmt.replace('%H', 'HH')
-            fmt = fmt.replace('%M', 'mm')
-            fmt = fmt.replace('%S', 'ss')
-            fmt = fmt.replace('%f', 'SSS')
+            parts = fmt.split('%')
+            fmt = ''
+            for i, part in enumerate(parts):
+                if len(part) == 0:
+                    continue
+                if i > 0:
+                    modifier = part[0]
+                    part = part[1:]
+                    fmt += cls.DATE_CONVERSION[modifier]
+                fmt += cls._quote_literals(part)
             assert '%' not in fmt
             return fmt
         else:
