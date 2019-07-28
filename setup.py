@@ -26,6 +26,8 @@ INSTALL_REQUIRES = [
 ]
 TESTS_REQUIRE = [
     'pylama',
+    'pytest',
+    'mock',
     'tox',
 ]
 EXAMPLES_REQUIRE = [
