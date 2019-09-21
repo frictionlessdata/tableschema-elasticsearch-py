@@ -21,8 +21,8 @@ def read(*paths):
 PACKAGE = 'tableschema_elasticsearch'
 NAME = PACKAGE.replace('_', '-')
 INSTALL_REQUIRES = [
-    'six>=1.9,<2.0a',
-    'elasticsearch>=5.0,<6.0',
+    'six>=1.9',
+    'elasticsearch>=5.0',
 ]
 TESTS_REQUIRE = [
     'pylama',
