@@ -29,6 +29,7 @@ TESTS_REQUIRE = [
     'pytest',
     'mock',
     'tox',
+    'tabulator',
 ]
 EXAMPLES_REQUIRE = [
     'python-dotenv',
