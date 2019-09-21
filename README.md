@@ -3,6 +3,7 @@
 [![Travis](https://img.shields.io/travis/frictionlessdata/tableschema-elasticsearch-py/master.svg)](https://travis-ci.org/frictionlessdata/tableschema-elasticsearch-py)
 [![Coveralls](http://img.shields.io/coveralls/frictionlessdata/tableschema-elasticsearch-py/master.svg)](https://coveralls.io/r/frictionlessdata/tableschema-elasticsearch-py?branch=master)
 [![PyPi](https://img.shields.io/pypi/v/tableschema-elasticsearch.svg)](https://pypi.python.org/pypi/tableschema-elasticsearch)
+[![Github](https://img.shields.io/badge/github-master-brightgreen)](https://github.com/frictionlessdata/tableschema-elasticsearch-py)
 [![Gitter](https://img.shields.io/gitter/room/frictionlessdata/chat.svg)](https://gitter.im/frictionlessdata/chat)
 
 Generate and load ElasticSearch indexes based on [Table Schema](http://specs.frictionlessdata.io/table-schema/) descriptors.
