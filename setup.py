@@ -25,11 +25,12 @@ INSTALL_REQUIRES = [
     'elasticsearch>=5.0,<6.0',
 ]
 TESTS_REQUIRE = [
+    'mock',
     'pylama',
     'pytest',
-    'mock',
-    'tox',
+    'pytest-cov',
     'tabulator',
+    'tox',
 ]
 EXAMPLES_REQUIRE = [
     'python-dotenv',
