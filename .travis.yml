@@ -29,8 +29,9 @@ env:
 before_install:
   - >
     curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${ES_VER}.deb &&
-    sudo dpkg -i --force-confnew elasticsearch-${ES_VER}.deb &&
-    sudo service elasticsearch restart
+    sudo dpkg -i --force-confnew elasticsearch-${ES_VER}.deb
+  - sudo -i service elasticsearch start
+  - sleep 20 && curl localhost:9200
 
 install:
   - make install
