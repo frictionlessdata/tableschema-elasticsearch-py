@@ -76,8 +76,9 @@ class Storage(object):
             )
             params = dict()
             if doc_type is not None:
-                params= dict(include_type_name='true')
-            self.__es.indices.put_mapping(mapping, doc_type=doc_type, index=index_name, params=params)
+                params = dict(include_type_name='true')
+            self.__es.indices.put_mapping(mapping, doc_type=doc_type,
+                                          index=index_name, params=params)
 
     def generate_doc_id(self, row, primary_key):
         return '/'.join([str(row.get(k)) for k in primary_key])
