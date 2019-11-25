@@ -74,7 +74,10 @@ class Storage(object):
             mapping = mappers.descriptor_to_mapping(
                 descriptor, mapping_generator_cls=mapping_generator_cls
             )
-            self.__es.indices.put_mapping(doc_type, mapping, index=index_name)
+            params = dict()
+            if doc_type is not None:
+                params= dict(include_type_name='true')
+            self.__es.indices.put_mapping(mapping, doc_type=doc_type, index=index_name, params=params)
 
     def generate_doc_id(self, row, primary_key):
         return '/'.join([str(row.get(k)) for k in primary_key])
@@ -164,8 +167,21 @@ class Storage(object):
         size = 100
         done = False
         while not done:
+            body = None
+            if doc_type is not None:
+                body = dict(
+                    query=dict(
+                        bool=dict(
+                            filter=dict(
+                                match=dict(
+                                    _type=doc_type
+                                )
+                            )
+                        )
+                    )
+                )
             results = self.__es.search(index=bucket,
-                                       doc_type=doc_type,
+                                       body=body,
                                        from_=from_,
                                        size=size)
             hits = results.get('hits', {}).get('hits', [])
