@@ -4,6 +4,9 @@ dist:
 sudo:
   true
 
+services:
+- elasticsearch
+
 language:
   python
 

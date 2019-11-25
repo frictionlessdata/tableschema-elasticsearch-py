@@ -39,6 +39,7 @@ class Storage(object):
     def __init__(self, es=None):
         # Use the passed `es` or create a new Elasticsearch instance
         self.__es = es if es is not None else Elasticsearch()
+        self.__no_mapping_types = self.__es.info()['version']['number'] >= '7'
 
     def __repr__(self):
         # Template and format
@@ -75,7 +76,7 @@ class Storage(object):
                 descriptor, mapping_generator_cls=mapping_generator_cls
             )
             params = dict()
-            if doc_type is not None:
+            if doc_type is not None and self.__no_mapping_types:
                 params = dict(include_type_name='true')
             self.__es.indices.put_mapping(mapping, doc_type=doc_type,
                                           index=index_name, params=params)
