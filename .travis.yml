@@ -2,10 +2,7 @@ dist:
   xenial
 
 sudo:
-  false
-
-services:
-  - elasticsearch
+  true
 
 language:
   python
@@ -22,6 +19,12 @@ language:
 env:
   global:
     - TOXENV="py${PYTHON_VERSION//./}"
+  jobs:
+  - ES_VER=5.5.0
+  - ES_VER=7.4.1
+
+before_install:
+  - curl -O https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/${ES_VER}/elasticsearch-${ES_VER}.deb && sudo dpkg -i --force-confnew elasticsearch-${ES_VER}.deb && sudo service elasticsearch restart
 
 install:
   - make install
