@@ -119,6 +119,7 @@ storage.create('bucket', [(doc_type, descriptor)],
                reindex=False,
                always_recreate=False,
                mapping_generator_cls=None)
+        # doc_type can be None in case mapping_types are not supported (ES version >= 7.0.0)
         # reindex will copy existing documents from an existing index with the same name (in case of a mapping conflict)
         # always_recreate will always recreate an index, even if it already exists. default is to update mappings only.
         # mapping_generator_cls allows customization of the generated mapping
