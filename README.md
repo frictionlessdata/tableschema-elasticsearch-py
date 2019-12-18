@@ -18,10 +18,12 @@ Generate and load ElasticSearch indexes based on [Table Schema](http://specs.fri
 
   - [Getting Started](#getting-started)
     - [Installation](#installation)
-    - [Examples](#examples)
   - [Documentation](#documentation)
-    - [Storage](#storage)
+    - [Usage overview](#usage-overview)
     - [Mappings](#mappings)
+    - [Custom mappings](#custom-mappings)
+  - [API Reference](#api-reference)
+    - [`Storage`](#storage)
   - [Contributing](#contributing)
   - [Changelog](#changelog)
 
@@ -37,9 +39,9 @@ The package use semantic versioning. It means that major versions  could include
 pip install tableschema-elasticsearch
 ```
 
-### Examples
+## Documentation
 
-Code examples in this readme requires Python 3.3+ interpreter. You could see even more example in [examples](https://github.com/frictionlessdata/tableschema-spss-py/tree/master/examples) directory.
+### Usage overview
 
 ```python
 import elasticsearch
@@ -84,22 +86,6 @@ print(len(l))
 print(l[:10])
 
 ```
-
-## Documentation
-
-The whole public API of this package is described here and follows semantic versioning rules. Everyting outside of this readme are private API and could be changed without any notification on any new version.
-
-### Storage
-
-Package implements [Tabular Storage](https://github.com/frictionlessdata/tableschema-py#storage) interface (see full documentation on the link):
-
-![Storage](https://i.imgur.com/RQgrxqp.png)
-
-This driver provides an additional API:
-
-#### `Storage(es=None)`
-
-- `es (object)` - `elasticsearch.Elastisearc` instance. If not provided new one will be created.
 
 In this driver `elasticsearch` is used as the db wrapper. We can get storage this way:
 
@@ -188,18 +174,70 @@ Example:
 }
 ```
 
-#### Custom mappings
+### Custom mappings
 
 By providing a custom mapping generator class (via `mapping_generator_cls`), inheriting from the MappingGenerator class you should be able
 
+## API Reference
+
+### `Storage`
+```python
+Storage(self, es=None)
+```
+Elasticsearch Tabular Storage.
+
+Package implements
+[Tabular Storage](https://github.com/frictionlessdata/tableschema-py#storage)
+interface (see full documentation on the link):
+
+![Storage](https://i.imgur.com/RQgrxqp.png)
+
+> Only additional API is documented
+
+__Arguments__
+- __es (object)__: ElasticSearch instance
+
+
+#### `storage.create`
+```python
+storage.create(self, bucket, doc_types, reindex=False, always_recreate=False, mapping_generator_cls=None, index_settings=None)
+```
+Create index with mapping by schema.
+
+__Arguments__
+- __bucket(str)__:
+        Name of index to be created
+- __doc_types(list<(doc_type, descriptor)>)__:
+        List of tuples of doc_types and matching descriptors
+- __always_recreate__:
+        Delete index if already exists (otherwise just update mapping)
+- __reindex__:
+        On mapping mismath, automatically create
+        new index and migrate existing indexes to it
+- __mapping_generator_cls__:
+        subclass of MappingGenerator
+- __index_settings__:
+        settings which will be used in index creation
+
+
+#### `storage.delete`
+```python
+storage.delete(self, bucket=None)
+```
+Delete index with mapping by schema.
+
+__Arguments__
+- __bucket(str)__: Name of index to delete
+
+
 ## Contributing
 
-The project follows the [Open Knowledge International coding standards](https://github.com/okfn/coding-standards).
+> The project follows the [Open Knowledge International coding standards](https://github.com/okfn/coding-standards).
 
 Recommended way to get started is to create and activate a project virtual environment.
 To install package and development dependencies into active environment:
 
-```
+```bash
 $ make install
 ```
 
@@ -208,29 +246,6 @@ To run tests with linting and coverage:
 ```bash
 $ make test
 ```
-
-For linting `pylama` configured in `pylama.ini` is used. On this stage it's already
-installed into your environment and could be used separately with more fine-grained control
-as described in documentation - https://pylama.readthedocs.io/en/latest/.
-
-For example to sort results by error type:
-
-```bash
-$ pylama --sort <path>
-```
-
-For testing `tox` configured in `tox.ini` is used.
-It's already installed into your environment and could be used separately with more fine-grained control as described in documentation - https://testrun.org/tox/latest/.
-
-For example to check subset of tests against Python 2 environment with increased verbosity.
-All positional arguments and options after `--` will be passed to `py.test`:
-
-```bash
-tox -e py27 -- -v tests/<path>
-```
-
-Under the hood `tox` uses `pytest` configured in `pytest.ini`, `coverage`
-and `mock` packages. This packages are available only in tox envionments.
 
 ## Changelog
 

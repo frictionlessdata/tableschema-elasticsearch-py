@@ -28,10 +28,17 @@ tracer.addHandler(logging.StreamHandler(sys.stderr))
 class Storage(object):
     """Elasticsearch Tabular Storage.
 
-    It's an implementation of `tableschema.Storage`.
+    Package implements
+    [Tabular Storage](https://github.com/frictionlessdata/tableschema-py#storage)
+    interface (see full documentation on the link):
 
-    Args:
+    ![Storage](https://i.imgur.com/RQgrxqp.png)
+
+    > Only additional API is documented
+
+    # Arguments
         es (object): ElasticSearch instance
+
     """
 
     # Public
@@ -89,17 +96,21 @@ class Storage(object):
                mapping_generator_cls=None, index_settings=None):
         """Create index with mapping by schema.
 
-        Parameters
-        ----------
-        bucket: str
-            Name of index to be created
-        doc_types: list<(doc_type, descriptor)>
-            List of tuples of doc_types and matching descriptors
-        always_recreate: Delete index if already exists (otherwise just update mapping)
-        reindex: On mapping mismath, automatically create new index and migrate existing
-                 indexes to it
-        mapping_generator_cls: subclass of MappingGenerator
-        index_settings: settings which will be used in index creation
+        # Arguments
+            bucket(str):
+                Name of index to be created
+            doc_types(list<(doc_type, descriptor)>):
+                List of tuples of doc_types and matching descriptors
+            always_recreate:
+                Delete index if already exists (otherwise just update mapping)
+            reindex:
+                On mapping mismath, automatically create
+                new index and migrate existing indexes to it
+            mapping_generator_cls:
+                subclass of MappingGenerator
+            index_settings:
+                settings which will be used in index creation
+
         """
         existing_index_names = []
         if self.__es.indices.exists_alias(name=bucket):
@@ -142,10 +153,8 @@ class Storage(object):
     def delete(self, bucket=None):
         """Delete index with mapping by schema.
 
-        Parameters
-        ----------
-        bucket: str
-             Name of index to delete
+        # Arguments
+            bucket(str): Name of index to delete
 
         """
         def internal_delete(bucket):
