@@ -26,6 +26,7 @@ def test_descriptor_to_mapping():
             {'name': 'another-time', 'type': 'time'},
             {'name': 'an-array', 'type': 'array', 'es:itemType': 'string'},
             {'name': 'another-array', 'type': 'array', 'es:itemType': 'integer'},
+            {'name': 'a-geopoint', 'type': 'geopoint'},
             {'name': 'an-object', 'type': 'object', 'es:schema': {'fields': [{'name': 'inner', 'type': 'integer'}]}},
             {'name': 'another-object', 'type': 'object', 'es:index': False},
         ]
@@ -44,6 +45,7 @@ def test_descriptor_to_mapping():
                     'another-time': {'type': 'date', 'ignore_malformed': True, 'format': 'strict_date_optional_time'},
                     'an-array': {'type': 'text'},
                     'another-array': {'type': 'long', 'ignore_malformed': True, 'index': False},
+                    'a-geopoint': {'type': 'geo_point', 'ignore_malformed': True,'index': False},
                     'an-object': {'properties': {'inner': {'type': 'long', 'ignore_malformed': True, 'index': False}},
                                   'enabled': True, 'dynamic': False},
                     'another-object': {'properties': {}, 'enabled': False, 'dynamic': False}}}
