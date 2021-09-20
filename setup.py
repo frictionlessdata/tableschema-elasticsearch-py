@@ -25,6 +25,7 @@ INSTALL_REQUIRES = [
     'elasticsearch>=7.0,<8.0',
 ]
 TESTS_REQUIRE = [
+    'coverage',
     'mock',
     'pylama',
     'pytest',

@@ -38,7 +38,7 @@ test:
 	sudo -i service elasticsearch start
 	sleep 20 && curl localhost:9200
 	pylama $(PACKAGE)
-	tox
+	py.test --cov tableschema_elasticsearch --cov-report term-missing
 
 version:
 	@echo $(VERSION)
