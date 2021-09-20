@@ -57,24 +57,22 @@ storage=jsontableschema_es.Storage(es)
 print(list(storage.buckets))
 
 # Create a new index
-storage.create('test', [
-    ('numbers',
-     {
+storage.create('test', {
          'fields': [
              {
                  'name': 'num',
                  'type': 'number'
              }
          ]
-     })
-])
+     }
+)
 
 # Write data to index
-l=list(storage.write(INDEX_NAME, 'numbers', ({'num':i} for i in range(1000)), ['num']))
+l=list(storage.write(INDEX_NAME, ({'num':i} for i in range(1000)), ['num']))
 print(len(l))
 print(l[:10], '...')
 
-l=list(storage.write(INDEX_NAME, 'numbers', ({'num':i} for i in range(500,1500)), ['num']))
+l=list(storage.write(INDEX_NAME, ({'num':i} for i in range(500,1500)), ['num']))
 print(len(l))
 print(l[:10], '...')
 
@@ -91,7 +89,7 @@ In this driver `elasticsearch` is used as the db wrapper. We can get storage thi
 
 ```python
 from elasticsearch import Elasticsearch
-from jsontableschema_sql import Storage
+from jsontableschema_elasticsearch import Storage
 
 engine = Elasticsearch()
 storage = Storage(engine)
@@ -101,19 +99,18 @@ Then we could interact with storage ('buckets' are ElasticSearch indexes in this
 
 ```python
 storage.buckets # iterator over bucket names
-storage.create('bucket', [(doc_type, descriptor)],
+storage.create('bucket', descriptor,
                reindex=False,
                always_recreate=False,
                mapping_generator_cls=None)
-        # doc_type can be None in case mapping_types are not supported (ES version >= 7.0.0)
         # reindex will copy existing documents from an existing index with the same name (in case of a mapping conflict)
         # always_recreate will always recreate an index, even if it already exists. default is to update mappings only.
         # mapping_generator_cls allows customization of the generated mapping
 storage.delete('bucket')
 storage.describe('bucket') # return descriptor, not implemented yet
-storage.iter('bucket', doc_type=optional) # yield rows
-storage.read('bucket', doc_type=optional) # return rows
-storage.write('bucket', doc_type, rows, primary_key,
+storage.iter('bucket') # yield rows
+storage.read('bucket') # return rows
+storage.write('bucket', rows, primary_key,
               as_generator=False)
         # primary_key is a list of field names which will be used to generate document ids
 ```
@@ -200,15 +197,15 @@ __Arguments__
 
 #### `storage.create`
 ```python
-storage.create(self, bucket, doc_types, reindex=False, always_recreate=False, mapping_generator_cls=None, index_settings=None)
+storage.create(self, bucket, descriptor, reindex=False, always_recreate=False, mapping_generator_cls=None, index_settings=None)
 ```
 Create index with mapping by schema.
 
 __Arguments__
 - __bucket(str)__:
         Name of index to be created
-- __doc_types(list<(doc_type, descriptor)>)__:
-        List of tuples of doc_types and matching descriptors
+- __descriptor__:
+        dDscriptor of index to be created
 - __always_recreate__:
         Delete index if already exists (otherwise just update mapping)
 - __reindex__:
