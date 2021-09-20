@@ -34,6 +34,9 @@ templates:
 	sed -i -E "s/@(\w*)/@$(LEAD)/" .github/pull_request_template.md
 
 test:
+	curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${ES_VER}.deb && sudo dpkg -i --force-confnew elasticsearch-${ES_VER}.deb
+	sudo -i service elasticsearch start
+	sleep 20 && curl localhost:9200
 	pylama $(PACKAGE)
 	tox
 
