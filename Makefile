@@ -34,11 +34,11 @@ templates:
 	sed -i -E "s/@(\w*)/@$(LEAD)/" .github/pull_request_template.md
 
 test:
-	curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${ES_VER}.deb && sudo dpkg -i --force-confnew elasticsearch-${ES_VER}.deb
-	sudo -i service elasticsearch start
+	docker run -d -p 9200:9200 --name es -e discovery.type=single-node -e xpack.security.enabled=false elasticsearch:${ES_VER}
 	sleep 20 && curl localhost:9200
 	pylama $(PACKAGE)
-	py.test --cov tableschema_elasticsearch --cov-report term-missing
+	py.test -vvv --cov tableschema_elasticsearch --cov-report term-missing || echo 'TESTING FAILED'
+	docker stop es && docker rm es
 
 version:
 	@echo $(VERSION)
