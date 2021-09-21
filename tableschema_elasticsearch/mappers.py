@@ -84,8 +84,8 @@ class MappingGenerator(object):
                      'ignore_malformed': True,
                      'format': cls._convert_date_format(field.get('format'))},
             'geopoint': {'type': 'geo_point',
-                        'ignore_malformed': True,
-                        'index': False},
+                         'ignore_malformed': True,
+                         'index': False},
             'object': {'properties':
                        cls._update_properties({}, subschema,
                                               prefix + field['name'] + '.')
