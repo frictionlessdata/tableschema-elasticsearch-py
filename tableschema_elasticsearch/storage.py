@@ -42,7 +42,6 @@ class Storage(object):
     """
 
     # Public
-
     def __init__(self, es=None):
         # Use the passed `es` or create a new Elasticsearch instance
         self.__es = es if es is not None else Elasticsearch()
@@ -55,7 +54,7 @@ class Storage(object):
 
     @property
     def buckets(self):
-        indexes = self.__es.indices.get_alias('*')
+        indexes = self.__es.indices.get_alias(index='*')
         for index_name, index in indexes.items():
             for alias_name in index.get('aliases', {}).keys():
                 yield alias_name
@@ -72,15 +71,15 @@ class Storage(object):
             body = dict(
                 settings=index_settings
             )
-        self.__es.indices.create(index_name, body=body)
-        self.__es.indices.put_alias(index_name, bucket)
+        self.__es.indices.create(index=index_name, body=body)
+        self.__es.indices.put_alias(index=index_name, name=bucket)
         return index_name
 
     def put_mapping(self, bucket, descriptor, index_name, mapping_generator_cls):
         mapping = mappers.descriptor_to_mapping(
             descriptor, mapping_generator_cls=mapping_generator_cls
         )
-        self.__es.indices.put_mapping(mapping, index=index_name)
+        self.__es.indices.put_mapping(index=index_name, **mapping)
 
     def generate_doc_id(self, row, primary_key):
         return '/'.join([str(row.get(k)) for k in primary_key])
@@ -108,7 +107,7 @@ class Storage(object):
         """
         existing_index_names = []
         if self.__es.indices.exists_alias(name=bucket):
-            existing_index_names = self.__es.indices.get_alias(bucket)
+            existing_index_names = self.__es.indices.get_alias(name=bucket)
             existing_index_names = sorted(existing_index_names.keys())
 
         if len(existing_index_names) == 0 or always_recreate:
@@ -138,11 +137,11 @@ class Storage(object):
                     version_type='external'
                 )
             )
-            self.__es.reindex(reindex_body)
+            self.__es.reindex(body=reindex_body)
             self.__es.indices.flush()
 
             for existing_index_name in existing_index_names:
-                self.__es.indices.delete(existing_index_name)
+                self.__es.indices.delete(index=existing_index_name)
 
     def delete(self, bucket=None):
         """Delete index with mapping by schema.
@@ -153,10 +152,10 @@ class Storage(object):
         """
         def internal_delete(bucket):
             if self.__es.indices.exists_alias(name=bucket):
-                existing_index_names = self.__es.indices.get_alias(bucket)
+                existing_index_names = self.__es.indices.get_alias(name=bucket)
                 existing_index_names = list(existing_index_names.keys())
                 for existing_index_name in existing_index_names:
-                    self.__es.indices.delete(existing_index_name)
+                    self.__es.indices.delete(index=existing_index_name)
 
         if bucket is None:
             for bucket in self.buckets:
@@ -226,4 +225,4 @@ class Storage(object):
         else:
             collections.deque(iter, maxlen=0)
 
-        self.__es.indices.flush(bucket)
+        self.__es.indices.flush(index=bucket)
