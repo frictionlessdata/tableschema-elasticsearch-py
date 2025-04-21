@@ -22,7 +22,7 @@ PACKAGE = 'tableschema_elasticsearch'
 NAME = PACKAGE.replace('_', '-')
 INSTALL_REQUIRES = [
     'six>=1.9',
-    'elasticsearch>=7.0,<7.14',
+    'elasticsearch>=7.0,<9.0',
 ]
 TESTS_REQUIRE = [
     'coverage',
