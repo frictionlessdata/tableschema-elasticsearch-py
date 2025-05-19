@@ -32,7 +32,7 @@ TESTS_REQUIRE = [
     'pytest-cov',
     'tabulator',
     'tox',
-    'setuptools==71.0.0',
+    'setuptools==78.1.1',
 ]
 EXAMPLES_REQUIRE = [
     'python-dotenv',
