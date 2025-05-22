@@ -11,7 +11,7 @@ import collections
 import uuid
 
 import logging
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, __version__ as es_version
 from elasticsearch.helpers import streaming_bulk
 from elasticsearch.exceptions import RequestError
 
@@ -79,7 +79,10 @@ class Storage(object):
         mapping = mappers.descriptor_to_mapping(
             descriptor, mapping_generator_cls=mapping_generator_cls
         )
-        self.__es.indices.put_mapping(index=index_name, **mapping)
+        if es_version[0] < 8:
+            self.__es.indices.put_mapping(index=index_name, body=mapping)
+        else:
+            self.__es.indices.put_mapping(index=index_name, **mapping)
 
     def generate_doc_id(self, row, primary_key):
         return '/'.join([str(row.get(k)) for k in primary_key])
